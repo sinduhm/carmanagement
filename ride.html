@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoRide - Your Smart, Cost-Effective Ride</title>
+    <!-- Tailwind CSS for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for the app */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* Disable tap highlight on mobile */
+        }
+
+        /* Loading spinner animation */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #f97316; /* Orange-500 */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Screen transition effect */
+        .screen {
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+        }
+        .screen.hidden {
+            opacity: 0;
+            transform: scale(0.95);
+            pointer-events: none;
+            position: absolute;
+        }
+        
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b; /* Slate-800 */
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #475569; /* Slate-600 */
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b; /* Slate-500 */
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white overflow-hidden h-screen flex items-center justify-center">
+
+    <!-- Main Mobile-like Container -->
+    <div id="app-container" class="w-full max-w-md h-full md:h-[95vh] md:max-h-[800px] bg-slate-800 shadow-2xl rounded-lg overflow-hidden flex flex-col relative">
+
+        <!-- ===== Booking Screen (Initial View) ===== -->
+        <div id="booking-screen" class="screen flex flex-col h-full">
+            <!-- Header -->
+            <header class="p-4 flex justify-between items-center bg-slate-900/50 backdrop-blur-sm">
+                <h1 class="text-xl font-bold text-orange-500">GoRide</h1>
+                <button class="w-10 h-10 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors flex items-center justify-center">
+                    <i class="fas fa-user text-white"></i>
+                </button>
+            </header>
+
+            <!-- Map Placeholder -->
+            <div class="flex-grow bg-slate-700 relative flex items-center justify-center">
+                <!-- In a real app, this would be an interactive map like Google Maps or Leaflet.js -->
+                <img src="https://placehold.co/600x800/334155/e2e8f0?text=Map+View" class="w-full h-full object-cover" alt="Map placeholder">
+                <div class="absolute inset-0 bg-slate-900/30"></div>
+                <div class="absolute text-center">
+                    <i class="fas fa-map-marker-alt text-4xl text-orange-500 animate-pulse"></i>
+                    <p class="text-slate-200 mt-2 font-medium">Map Goes Here</p>
+                </div>
+            </div>
+
+            <!-- Booking Form Panel -->
+            <div id="booking-panel" class="bg-slate-800 p-4 rounded-t-2xl shadow-lg absolute bottom-0 w-full transition-transform duration-300 ease-in-out transform translate-y-0">
+                <div class="w-12 h-1.5 bg-slate-600 rounded-full mx-auto mb-4 cursor-grab" id="drag-handle"></div>
+                <h2 class="text-lg font-semibold mb-3">Where to?</h2>
+                
+                <!-- Input Fields -->
+                <div class="space-y-3">
+                    <div class="relative">
+                        <i class="fas fa-circle-dot text-orange-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        <input id="pickup-location" type="text" placeholder="Current Location" class="w-full bg-slate-700 border-2 border-transparent focus:border-orange-500 rounded-lg py-3 pl-10 pr-4 transition-colors focus:outline-none" value="Main Street, Downtown">
+                    </div>
+                    <div class="relative">
+                        <i class="fas fa-location-dot text-blue-500 absolute left-3 top-1/2 -translate-y-1/2"></i>
+                        <input id="dropoff-location" type="text" placeholder="Enter destination" class="w-full bg-slate-700 border-2 border-transparent focus:border-orange-500 rounded-lg py-3 pl-10 pr-4 transition-colors focus:outline-none">
+                    </div>
+                </div>
+
+                <!-- Advanced Options -->
+                <div class="flex items-center justify-between mt-4">
+                     <button id="schedule-btn" class="flex items-center gap-2 text-sm bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-clock"></i>
+                        <span>Schedule</span>
+                    </button>
+                     <button id="promo-btn" class="flex items-center gap-2 text-sm bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-tag"></i>
+                        <span>Promo</span>
+                    </button>
+                </div>
+
+                <button id="find-ride-btn" class="w-full bg-orange-600 hover:bg-orange-500 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-lg mt-4 transition-all duration-300 transform active:scale-95">
+                    Find a Ride
+                </button>
+            </div>
+
+            <!-- Ride Options Panel -->
+            <div id="ride-options-panel" class="bg-slate-900 p-4 absolute bottom-0 w-full transition-transform duration-300 ease-in-out transform translate-y-full">
+                <div class="flex justify-between items-center mb-4">
+                    <button id="back-to-booking-btn" class="text-slate-300 hover:text-white"><i class="fas fa-arrow-left"></i></button>
+                    <h2 class="text-lg font-semibold">Choose Your Ride</h2>
+                    <div></div>
+                </div>
+                <div id="ride-options-list" class="space-y-2 max-h-48 overflow-y-auto">
+                    <!-- Ride options will be dynamically inserted here -->
+                </div>
+                <button id="confirm-booking-btn" class="w-full bg-orange-600 hover:bg-orange-500 text-white font-bold py-3.5 rounded-lg mt-4 transition-all duration-300 transform active:scale-95">
+                    Confirm GoRide
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== Searching Screen ===== -->
+        <div id="searching-screen" class="screen hidden w-full h-full bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
+            <div class="spinner"></div>
+            <h2 class="text-2xl font-bold mt-6">Contacting drivers...</h2>
+            <p class="text-slate-400 mt-2">We're finding the best driver for you. This won't take long.</p>
+            <button id="cancel-search-btn" class="mt-8 bg-red-600 hover:bg-red-500 px-6 py-2 rounded-lg font-semibold transition-colors">Cancel</button>
+        </div>
+
+        <!-- ===== Driver Found Screen ===== -->
+        <div id="driver-found-screen" class="screen hidden flex flex-col h-full">
+             <!-- Map Placeholder -->
+            <div class="flex-grow bg-slate-700 relative flex items-center justify-center">
+                <img src="https://placehold.co/600x800/334155/e2e8f0?text=Live+Tracking" class="w-full h-full object-cover" alt="Live tracking map placeholder">
+                <div class="absolute inset-0 bg-slate-900/30"></div>
+                <div class="absolute text-center top-1/4">
+                    <p class="text-white text-lg">Your driver is on the way!</p>
+                    <p class="text-orange-400 font-bold text-4xl mt-2">2 min</p>
+                </div>
+            </div>
+
+            <!-- Driver Info Panel -->
+            <div class="bg-slate-800 p-4 rounded-t-2xl shadow-lg">
+                <p class="text-sm text-slate-400 text-center">Driver is arriving at Main Street, Downtown</p>
+                <div class="flex items-center gap-4 mt-4">
+                    <img id="driver-image" src="https://placehold.co/100x100/475569/e2e8f0?text=Driver" class="w-16 h-16 rounded-full object-cover" alt="Driver photo">
+                    <div class="flex-grow">
+                        <p class="font-bold text-lg"><span id="driver-name">Alex Morgan</span> <span class="text-sm font-medium text-slate-300 ml-2"><i class="fas fa-star text-yellow-400"></i> <span id="driver-rating">4.9</span></span></p>
+                        <p class="text-slate-400"><span id="driver-car-model">Tesla Model 3</span> &bull; <span id="driver-car-plate" class="font-mono bg-slate-700 px-2 py-0.5 rounded">GO-R1DE</span></p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors flex items-center justify-center text-lg"><i class="fas fa-comment-dots"></i></button>
+                        <button class="w-12 h-12 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors flex items-center justify-center text-lg"><i class="fas fa-phone"></i></button>
+                    </div>
+                </div>
+                 <button id="cancel-trip-btn" class="w-full border-2 border-red-600 text-red-500 hover:bg-red-600 hover:text-white font-bold py-3 rounded-lg mt-4 transition-all">
+                    Cancel Trip
+                </button>
+            </div>
+        </div>
+        
+         <!-- ===== Modal for alerts/confirmations ===== -->
+        <div id="modal" class="hidden absolute inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+            <div class="bg-slate-800 rounded-lg p-6 w-full max-w-sm text-center shadow-xl">
+                <h3 id="modal-title" class="text-lg font-bold mb-2">Schedule Ride</h3>
+                <p id="modal-body" class="text-slate-300 mb-6">This feature is coming soon! For now, you can book rides instantly.</p>
+                <button id="modal-close-btn" class="bg-orange-600 hover:bg-orange-500 text-white font-bold py-2 px-6 rounded-lg transition-colors">Got it</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- STATE MANAGEMENT ---
+            const state = {
+                currentScreen: 'booking-screen',
+                selectedRideId: null,
+            };
+
+            // --- DOM ELEMENTS ---
+            const screens = {
+                booking: document.getElementById('booking-screen'),
+                searching: document.getElementById('searching-screen'),
+                driverFound: document.getElementById('driver-found-screen'),
+            };
+            const bookingPanel = document.getElementById('booking-panel');
+            const rideOptionsPanel = document.getElementById('ride-options-panel');
+            const dropoffInput = document.getElementById('dropoff-location');
+            const findRideBtn = document.getElementById('find-ride-btn');
+            const backToBookingBtn = document.getElementById('back-to-booking-btn');
+            const rideOptionsList = document.getElementById('ride-options-list');
+            const confirmBookingBtn = document.getElementById('confirm-booking-btn');
+            const cancelSearchBtn = document.getElementById('cancel-search-btn');
+            const cancelTripBtn = document.getElementById('cancel-trip-btn');
+            
+            // Modal elements
+            const modal = document.getElementById('modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const modalCloseBtn = document.getElementById('modal-close-btn');
+            const scheduleBtn = document.getElementById('schedule-btn');
+            const promoBtn = document.getElementById('promo-btn');
+            
+            // --- MOCK DATA ---
+            const rideTypes = [
+                { id: 'pool', name: 'GoPool', description: 'Share with others, save big', multiplier: 0.7, icon: 'fas fa-users', capacity: '1-2' },
+                { id: 'eco', name: 'GoEco', description: 'Affordable everyday rides', multiplier: 1, icon: 'fas fa-car', capacity: '1-4' },
+                { id: 'ev', name: 'GoGreen', description: 'Eco-friendly electric cars', multiplier: 1.2, icon: 'fas fa-leaf', capacity: '1-4' },
+                { id: 'premium', name: 'GoLuxe', description: 'High-end luxury cars', multiplier: 1.8, icon: 'fas fa-gem', capacity: '1-4' },
+                { id: 'xl', name: 'GoXL', description: 'For groups of up to 6', multiplier: 1.5, icon: 'fas fa-van-shuttle', capacity: '1-6' },
+            ];
+
+            const drivers = [
+                { name: 'Alex Morgan', rating: 4.9, carModel: 'Tesla Model 3', plate: 'GO-R1DE', image: 'https://placehold.co/100x100/475569/e2e8f0?text=Alex' },
+                { name: 'Maria Garcia', rating: 4.8, carModel: 'Toyota Prius', plate: 'GO-GR3N', image: 'https://placehold.co/100x100/475569/e2e8f0?text=Maria' },
+                { name: 'Chen Wei', rating: 5.0, carModel: 'Audi A8', plate: 'GO-LUXE', image: 'https://placehold.co/100x100/475569/e2e8f0?text=Chen' }
+            ];
+
+            // --- UI FUNCTIONS ---
+
+            // Function to switch between screens
+            function showScreen(screenId) {
+                Object.values(screens).forEach(screen => screen.classList.add('hidden'));
+                if (screens[screenId]) {
+                    screens[screenId].classList.remove('hidden');
+                }
+                state.currentScreen = screenId;
+            }
+            
+            // Function to show a modal message
+            function showModal(title, body) {
+                modalTitle.textContent = title;
+                modalBody.textContent = body;
+                modal.classList.remove('hidden');
+            }
+
+            // Function to update the ride options list
+            function updateRideOptions() {
+                rideOptionsList.innerHTML = '';
+                const baseFare = 150; // Base fare in local currency for simulation
+                
+                rideTypes.forEach(ride => {
+                    const estimatedFare = (baseFare * ride.multiplier).toFixed(2);
+                    const isSelected = ride.id === state.selectedRideId;
+                    
+                    rideOptionsList.innerHTML += `
+                        <div id="ride-${ride.id}" class="ride-option flex items-center gap-4 p-3 rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-orange-600' : 'bg-slate-800 hover:bg-slate-700'}">
+                            <div class="w-12 h-12 bg-slate-700 ${isSelected ? 'bg-orange-500' : ''} rounded-lg flex items-center justify-center text-xl">
+                                <i class="${ride.icon}"></i>
+                            </div>
+                            <div class="flex-grow">
+                                <p class="font-bold">${ride.name} <span class="text-sm font-light text-slate-400 ml-2"><i class="fas fa-user-group"></i> ${ride.capacity}</span></p>
+                                <p class="text-sm text-slate-400">${ride.description}</p>
+                            </div>
+                            <p class="font-bold text-lg">₹${estimatedFare}</p>
+                        </div>
+                    `;
+                });
+                
+                // Re-add event listeners after updating innerHTML
+                document.querySelectorAll('.ride-option').forEach(option => {
+                    option.addEventListener('click', () => {
+                        const rideId = option.id.split('-')[1];
+                        state.selectedRideId = rideId;
+                        updateRideOptions(); // Re-render to show selection
+                    });
+                });
+            }
+
+            function togglePanels(showOptions) {
+                if (showOptions) {
+                    bookingPanel.classList.add('translate-y-full');
+                    rideOptionsPanel.classList.remove('translate-y-full');
+                } else {
+                    bookingPanel.classList.remove('translate-y-full');
+                    rideOptionsPanel.classList.add('translate-y-full');
+                }
+            }
+
+            // --- EVENT LISTENERS ---
+
+            dropoffInput.addEventListener('input', () => {
+                findRideBtn.disabled = dropoffInput.value.trim() === '';
+            });
+
+            findRideBtn.addEventListener('click', () => {
+                if (!dropoffInput.value.trim()) return;
+                state.selectedRideId = 'eco'; // Set a default selection
+                updateRideOptions();
+                togglePanels(true);
+            });
+
+            backToBookingBtn.addEventListener('click', () => togglePanels(false));
+            
+            confirmBookingBtn.addEventListener('click', () => {
+                if(!state.selectedRideId) {
+                    showModal('No Ride Selected', 'Please select a ride type before confirming.');
+                    return;
+                }
+                showScreen('searching');
+
+                // Simulate finding a driver
+                setTimeout(() => {
+                    const randomDriver = drivers[Math.floor(Math.random() * drivers.length)];
+                    document.getElementById('driver-name').textContent = randomDriver.name;
+                    document.getElementById('driver-rating').textContent = randomDriver.rating;
+                    document.getElementById('driver-car-model').textContent = randomDriver.carModel;
+                    document.getElementById('driver-car-plate').textContent = randomDriver.plate;
+                    document.getElementById('driver-image').src = randomDriver.image;
+
+                    showScreen('driverFound');
+                }, 3000); // 3-second delay
+            });
+
+            cancelSearchBtn.addEventListener('click', () => {
+                showScreen('booking');
+                togglePanels(false);
+            });
+
+            cancelTripBtn.addEventListener('click', () => {
+                 showModal('Trip Canceled', 'Your trip has been successfully canceled.');
+                 // Reset app state
+                 dropoffInput.value = '';
+                 findRideBtn.disabled = true;
+                 showScreen('booking');
+                 togglePanels(false);
+            });
+
+            // Modal and advanced feature buttons
+            modalCloseBtn.addEventListener('click', () => modal.classList.add('hidden'));
+            scheduleBtn.addEventListener('click', () => showModal('Schedule Ride', 'This feature allows you to book a ride for a later time. It is currently in development.'));
+            promoBtn.addEventListener('click', () => showModal('Promo Code', 'Enter your promo code here to get discounts on your rides. This is a demo feature.'));
+
+            // --- INITIALIZATION ---
+            findRideBtn.disabled = true; // Disable button initially
+            showScreen('booking'); // Set the initial screen
+        });
+    </script>
+</body>
+</html>
